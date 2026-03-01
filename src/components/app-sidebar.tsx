@@ -6,6 +6,7 @@ import {
   HistoryIcon,
   KeyIcon,
   LogOutIcon,
+  SettingsIcon,
   StarIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -22,8 +23,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
 import { useHasActiveSubscription } from "@/features/subscriptions/hooks/use-subscription";
+import { logoutUser } from "@/api/auth";
+import { useSetAtom } from "jotai";
+import { userAtom } from "@/features/auth/store/auth-atoms";
+import { toast } from "sonner";
 
 const menuItems = [
   {
@@ -44,13 +48,19 @@ const menuItems = [
         icon: HistoryIcon,
         url: "/executions",
       },
+      {
+        title: "Settings",
+        icon: SettingsIcon,
+        url: "/settings",
+      },
     ],
-  }
+  },
 ];
 
 export const AppSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const setUser = useSetAtom(userAtom);
   const { hasActiveSubscription, isLoading } = useHasActiveSubscription();
 
   return (
@@ -59,8 +69,13 @@ export const AppSidebar = () => {
         <SidebarMenuItem>
           <SidebarMenuButton asChild className="gap-x-4 h-10 px-4">
             <Link href="/" prefetch>
-              <Image src="/logos/logo.svg" alt="Nodebase" width={30} height={30} />
-              <span className="font-semibold text-sm">Nodebase</span>
+              <Image
+                src="/logos/logo.svg"
+                alt="Nodebase"
+                width={36}
+                height={36}
+              />
+              <span className="font-semibold text-lg">Nodebase</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -99,9 +114,12 @@ export const AppSidebar = () => {
           {!hasActiveSubscription && !isLoading && (
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Upgade to Pro"
+                tooltip="Upgrade to Pro"
                 className="gap-x-4 h-10 px-4"
-                onClick={() => authClient.checkout({ slug: "pro" })}
+                onClick={() => {
+                  // TODO: Redirect to billing/checkout from custom backend
+                  toast.info("Billing requires custom backend integration");
+                }}
               >
                 <StarIcon className="h-4 w-4" />
                 <span>Upgrade to Pro</span>
@@ -112,7 +130,12 @@ export const AppSidebar = () => {
             <SidebarMenuButton
               tooltip="Billing Portal"
               className="gap-x-4 h-10 px-4"
-              onClick={() => authClient.customer.portal()}
+              onClick={() => {
+                // TODO: Redirect to billing portal from custom backend
+                toast.info(
+                  "Billing portal requires custom backend integration",
+                );
+              }}
             >
               <CreditCardIcon className="h-4 w-4" />
               <span>Billing Portal</span>
@@ -122,13 +145,15 @@ export const AppSidebar = () => {
             <SidebarMenuButton
               tooltip="Sign out"
               className="gap-x-4 h-10 px-4"
-              onClick={() => authClient.signOut({
-                fetchOptions: {
-                  onSuccess: () => {
-                    router.push("/login");
-                  },
-                },
-              })}
+              onClick={async () => {
+                try {
+                  await logoutUser();
+                  setUser(null);
+                  router.replace("/login");
+                } catch {
+                  toast.error("Failed to sign out");
+                }
+              }}
             >
               <LogOutIcon className="h-4 w-4" />
               <span>Sign out</span>

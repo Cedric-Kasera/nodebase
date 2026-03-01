@@ -1,22 +1,23 @@
-import { useTRPC } from "@/trpc/client"
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { useExecutionsParams } from "./use-executions-params";
 
-/**
- * Hook to fetch all executions using suspense
- */
+// Stubbed types matching the original API shape
+// TODO: Replace with real API calls when custom backend is ready
+export type Execution = {
+  id: string;
+  workflowId: string;
+  status: "RUNNING" | "SUCCESS" | "FAILED";
+  startedAt: Date;
+  completedAt: Date | null;
+  error: string | null;
+  output: unknown;
+};
+
 export const useSuspenseExecutions = () => {
-  const trpc = useTRPC();
   const [params] = useExecutionsParams();
-  
-  return useSuspenseQuery(trpc.executions.getMany.queryOptions(params));
+  void params;
+  return { data: { items: [] as Execution[], total: 0 } };
 };
 
-/**
- * Hook to fetch a single execution using suspense
- */
-export const useSuspenseExecution = (id: string) => {
-  const trpc = useTRPC();
-  return useSuspenseQuery(trpc.executions.getOne.queryOptions({ id }));
-};
-
+export const useSuspenseExecution = (_id: string) => ({
+  data: null as Execution | null,
+});

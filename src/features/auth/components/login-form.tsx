@@ -24,7 +24,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { loginUser } from "@/api/auth";
+import { useSetAtom } from "jotai";
+import { userAtom } from "@/features/auth/store/auth-atoms";
+import { useState } from "react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email address"),
@@ -35,6 +39,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const setUser = useSetAtom(userAtom);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -45,58 +50,35 @@ export function LoginForm() {
   });
 
   const signInGithub = async () => {
-    await authClient.signIn.social({
-      provider: "github",
-    }, {
-      onSuccess: () => {
-        router.push("/");
-      },
-      onError: () => {
-        toast.error("Something went wrong");
-      },
-    });
+    // TODO: Replace with custom backend OAuth redirect
+    toast.info("GitHub login requires custom backend integration");
   };
 
   const signInGoogle = async () => {
-    await authClient.signIn.social({
-      provider: "google",
-    }, {
-      onSuccess: () => {
-        router.push("/");
-      },
-      onError: () => {
-        toast.error("Something went wrong");
-      },
-    });
+    // TODO: Replace with custom backend OAuth redirect
+    toast.info("Google login requires custom backend integration");
   };
 
   const onSubmit = async (values: LoginFormValues) => {
-    await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-      callbackURL: "/",
-    }, {
-      onSuccess: () => {
-        router.push("/");
-      },
-      onError: (ctx) => {
-        toast.error(ctx.error.message);
-      },
-    });
+    try {
+      const res = await loginUser(values);
+      setUser(res.data.user);
+      toast.success(res.message || "Login successful");
+      router.replace("/workflows");
+    } catch (err: unknown) {
+      toast.error("Login failed. Please try again.");
+    }
   };
 
+  const [showPassword, setShowPassword] = useState(false);
   const isPending = form.formState.isSubmitting;
 
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle>
-            Welcome back
-          </CardTitle>
-          <CardDescription>
-            Login to continue
-          </CardDescription>
+          <CardTitle>Welcome back</CardTitle>
+          <CardDescription>Login to continue</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -110,7 +92,12 @@ export function LoginForm() {
                     type="button"
                     disabled={isPending}
                   >
-                    <Image alt="GitHub" src="/logos/github.svg" width={20} height={20} />
+                    <Image
+                      alt="GitHub"
+                      src="/logos/github.svg"
+                      width={20}
+                      height={20}
+                    />
                     Continue with GitHub
                   </Button>
                   <Button
@@ -120,7 +107,12 @@ export function LoginForm() {
                     type="button"
                     disabled={isPending}
                   >
-                    <Image alt="Google" src="/logos/google.svg" width={20} height={20} />
+                    <Image
+                      alt="Google"
+                      src="/logos/google.svg"
+                      width={20}
+                      height={20}
+                    />
                     Continue with Google
                   </Button>
                 </div>
@@ -149,11 +141,25 @@ export function LoginForm() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="*********"
-                            {...field}
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="*********"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              onClick={() => setShowPassword((v) => !v)}
+                              tabIndex={-1}
+                            >
+                              {showPassword ? (
+                                <EyeOffIcon className="size-4" />
+                              ) : (
+                                <EyeIcon className="size-4" />
+                              )}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -176,4 +182,4 @@ export function LoginForm() {
       </Card>
     </div>
   );
-};
+}

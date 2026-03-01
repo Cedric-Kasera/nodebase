@@ -1,25 +1,12 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "./auth";
+/**
+ * Auth checks are now handled client-side by the AuthProvider.
+ * These stubs remain so that existing server-component page files
+ * continue to compile without changes.
+ */
+export async function requireAuth() {
+    // Handled by AuthProvider — no server-side check needed
+}
 
-export const requireAuth = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/login");
-  }
-
-  return session;
-};
-
-export const requireUnauth = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (session) {
-    redirect("/");
-  }
-};
+export async function requireUnauth() {
+    // Handled by AuthProvider — no server-side check needed
+}

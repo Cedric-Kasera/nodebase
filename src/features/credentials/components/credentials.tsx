@@ -1,24 +1,29 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { 
+import {
   EmptyView,
-  EntityContainer, 
-  EntityHeader, 
-  EntityItem, 
-  EntityList, 
-  EntityPagination, 
+  EntityContainer,
+  EntityHeader,
+  EntityItem,
+  EntityList,
+  EntityPagination,
   EntitySearch,
   ErrorView,
-  LoadingView
 } from "@/components/entity-components";
-import { useRemoveCredential, useSuspenseCredentials } from "../hooks/use-credentials"
+import {
+  useRemoveCredential,
+  useSuspenseCredentials,
+  type Credential,
+  CredentialType,
+} from "../hooks/use-credentials";
 import { useRouter } from "next/navigation";
 import { useCredentialsParams } from "../hooks/use-credentials-params";
 import { useEntitySearch } from "@/hooks/use-entity-search";
-import type { Credential } from "@/generated/prisma";
-import { CredentialType } from "@/generated/prisma";
 import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { PAGINATION } from "@/config/constants";
 
 export const CredentialsSearch = () => {
   const [params, setParams] = useCredentialsParams();
@@ -36,12 +41,38 @@ export const CredentialsSearch = () => {
   );
 };
 
+/** Skeleton placeholder for a single credential card. */
+const CredentialItemSkeleton = () => (
+  <Card className="p-4 shadow-none">
+    <CardContent className="flex flex-row items-center justify-between p-0">
+      <div className="flex items-center gap-3">
+        <Skeleton className="size-8 rounded" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-[120px]" />
+          <Skeleton className="h-3 w-[200px]" />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+/** Skeleton list shown while credentials are loading. */
+export const CredentialsListSkeleton = () => (
+  <div className="flex flex-col gap-y-4">
+    {Array.from({ length: 3 }).map((_, i) => (
+      <CredentialItemSkeleton key={i} />
+    ))}
+  </div>
+);
+
 export const CredentialsList = () => {
-  const credentials = useSuspenseCredentials();
+  const { data, isLoading } = useSuspenseCredentials();
+
+  if (isLoading) return <CredentialsListSkeleton />;
 
   return (
     <EntityList
-      items={credentials.data.items}
+      items={data.items}
       getKey={(credential) => credential.id}
       renderItem={(credential) => <CredentialItem data={credential} />}
       emptyView={<CredentialsEmpty />}
@@ -62,21 +93,24 @@ export const CredentialsHeader = ({ disabled }: { disabled?: boolean }) => {
 };
 
 export const CredentialsPagination = () => {
-  const credentials = useSuspenseCredentials();
+  const { data, isLoading } = useSuspenseCredentials();
   const [params, setParams] = useCredentialsParams();
+
+  const pageSize = params.pageSize || PAGINATION.DEFAULT_PAGE_SIZE;
+  const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
 
   return (
     <EntityPagination
-      disabled={credentials.isFetching}
-      totalPages={credentials.data.totalPages}
-      page={credentials.data.page}
+      disabled={isLoading}
+      totalPages={totalPages}
+      page={params.page}
       onPageChange={(page) => setParams({ ...params, page })}
     />
   );
 };
 
 export const CredentialsContainer = ({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) => {
@@ -92,7 +126,7 @@ export const CredentialsContainer = ({
 };
 
 export const CredentialsLoading = () => {
-  return <LoadingView message="Loading credentials..." />;
+  return <CredentialsListSkeleton />;
 };
 
 export const CredentialsError = () => {
@@ -120,11 +154,7 @@ const credentialLogos: Record<CredentialType, string> = {
   [CredentialType.GEMINI]: "/logos/gemini.svg",
 };
 
-export const CredentialItem = ({
-  data,
-}: { 
-  data: Credential
-}) => {
+export const CredentialItem = ({ data }: { data: Credential }) => {
   const removeCredential = useRemoveCredential();
 
   const handleRemove = () => {
@@ -152,5 +182,5 @@ export const CredentialItem = ({
       onRemove={handleRemove}
       isRemoving={removeCredential.isPending}
     />
-  )
+  );
 };

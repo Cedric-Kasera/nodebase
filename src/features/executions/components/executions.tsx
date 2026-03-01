@@ -1,21 +1,26 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { 
+import {
   EmptyView,
-  EntityContainer, 
-  EntityHeader, 
-  EntityItem, 
-  EntityList, 
-  EntityPagination, 
+  EntityContainer,
+  EntityHeader,
+  EntityItem,
+  EntityList,
+  EntityPagination,
   ErrorView,
-  LoadingView
+  LoadingView,
 } from "@/components/entity-components";
-import { useSuspenseExecutions } from "../hooks/use-executions"
+import { useSuspenseExecutions } from "../hooks/use-executions";
 import { useExecutionsParams } from "../hooks/use-executions-params";
-import type { Execution } from "@/generated/prisma";
-import { ExecutionStatus } from "@/generated/prisma";
-import { CheckCircle2Icon, ClockIcon, Loader2Icon, XCircleIcon } from "lucide-react";
+import type { Execution } from "../hooks/use-executions";
+import { ExecutionStatus } from "@/config/constants";
+import {
+  CheckCircle2Icon,
+  ClockIcon,
+  Loader2Icon,
+  XCircleIcon,
+} from "lucide-react";
 
 export const ExecutionsList = () => {
   const executions = useSuspenseExecutions();
@@ -45,16 +50,16 @@ export const ExecutionsPagination = () => {
 
   return (
     <EntityPagination
-      disabled={executions.isFetching}
-      totalPages={executions.data.totalPages}
-      page={executions.data.page}
+      disabled={false}
+      totalPages={1}
+      page={1}
       onPageChange={(page) => setParams({ ...params, page })}
     />
   );
 };
 
 export const ExecutionsContainer = ({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) => {
@@ -78,48 +83,45 @@ export const ExecutionsError = () => {
 
 export const ExecutionsEmpty = () => {
   return (
-    <EmptyView
-      message="You haven't created any executions yet. Get started by running your first workflow"
-    />
+    <EmptyView message="You haven't created any executions yet. Get started by running your first workflow" />
   );
 };
 
-const getStatusIcon = (status: ExecutionStatus) => {
+const getStatusIcon = (status: string) => {
   switch (status) {
-    case ExecutionStatus.SUCCESS:
+    case "SUCCESS":
       return <CheckCircle2Icon className="size-5 text-green-600" />;
-    case ExecutionStatus.FAILED:
+    case "FAILED":
       return <XCircleIcon className="size-5 text-red-600" />;
-    case ExecutionStatus.RUNNING:
+    case "RUNNING":
       return <Loader2Icon className="size-5 text-blue-600 animate-spin" />;
     default:
       return <ClockIcon className="size-5 text-muted-foreground" />;
   }
-}
+};
 
-const formatStatus = (status: ExecutionStatus) => {
+const formatStatus = (status: string) => {
   return status.charAt(0) + status.slice(1).toLowerCase();
 };
 
 export const ExecutionItem = ({
   data,
-}: { 
+}: {
   data: Execution & {
-    workflow: {
-      id: string;
-      name: string;
-    };
+    workflow?: { id: string; name: string };
   };
 }) => {
   const duration = data.completedAt
     ? Math.round(
-      (new Date(data.completedAt).getTime() - new Date(data.startedAt).getTime()) / 1000,
-    )
+        (new Date(data.completedAt).getTime() -
+          new Date(data.startedAt).getTime()) /
+          1000,
+      )
     : null;
 
   const subtitle = (
     <>
-      {data.workflow.name} &bull; Started{" "}
+      {data.workflow?.name ?? data.workflowId} &bull; Started{" "}
       {formatDistanceToNow(data.startedAt, { addSuffix: true })}
       {duration !== null && <> &bull; Took {duration}s </>}
     </>
@@ -136,5 +138,5 @@ export const ExecutionItem = ({
         </div>
       }
     />
-  )
+  );
 };

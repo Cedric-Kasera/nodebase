@@ -1,31 +1,22 @@
 import { CredentialsContainer, CredentialsError, CredentialsList, CredentialsLoading } from "@/features/credentials/components/credentials";
-import { credentialsParamsLoader } from "@/features/credentials/server/params-loader";
-import { prefetchCredentials } from "@/features/credentials/server/prefetch";
-import { requireAuth } from "@/lib/auth-utils";
-import { HydrateClient } from "@/trpc/server";
-import { SearchParams } from "nuqs";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import type { SearchParams } from "nuqs/server";
 
 type Props = {
   searchParams: Promise<SearchParams>;
 };
 
-const Page = async ({ searchParams }: Props) => {
-  await requireAuth();
-
-  const params = await credentialsParamsLoader(searchParams);
-  prefetchCredentials(params);
+const Page = async ({ searchParams: _searchParams }: Props) => {
+  // await requireAuth(); // TODO: Re-enable when custom backend auth is ready
 
   return (
     <CredentialsContainer>
-      <HydrateClient>
-        <ErrorBoundary fallback={<CredentialsError />}>
-          <Suspense fallback={<CredentialsLoading />}>
-            <CredentialsList />
-          </Suspense>
-        </ErrorBoundary>
-      </HydrateClient>
+      <ErrorBoundary fallback={<CredentialsError />}>
+        <Suspense fallback={<CredentialsLoading />}>
+          <CredentialsList />
+        </Suspense>
+      </ErrorBoundary>
     </CredentialsContainer>
   );
 };

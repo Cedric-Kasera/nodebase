@@ -1,28 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { authClient } from "@/lib/auth-client";
+// Stubbed subscription hook — returns no active subscription
+// TODO: Replace with real call to custom backend billing API
+export const useSubscription = () => ({
+  data: null,
+  isLoading: false,
+  error: null,
+});
 
-export const useSubscription = () => {
-  return useQuery({
-    queryKey: ["subscription"],
-    queryFn: async () => {
-      const { data } = await authClient.customer.state();
-      return data;
-    },
-  });
-};
-
-export const useHasActiveSubscription = () => {
-  const { data: customerState, isLoading, ...rest } = 
-    useSubscription();
-
-  const hasActiveSubscription =
-    customerState?.activeSubscriptions &&
-    customerState.activeSubscriptions.length > 0;
-
-  return {
-    hasActiveSubscription,
-    subscription: customerState?.activeSubscriptions?.[0],
-    isLoading,
-    ...rest,
-  };
-};
+export const useHasActiveSubscription = () => ({
+  hasActiveSubscription: false,
+  subscription: undefined,
+  isLoading: false,
+});

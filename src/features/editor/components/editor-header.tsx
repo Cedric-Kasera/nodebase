@@ -13,9 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSuspenseWorkflow, useUpdateWorkflow, useUpdateWorkflowName } from "@/features/workflows/hooks/use-workflows";
+import {
+  useSuspenseWorkflow,
+  useUpdateWorkflow,
+  useUpdateWorkflowName,
+} from "@/features/workflows/hooks/use-workflows";
 import { useAtomValue } from "jotai";
 import { editorAtom } from "../store/atoms";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const EditorSaveButton = ({ workflowId }: { workflowId: string }) => {
   const editor = useAtomValue(editorAtom);
@@ -34,7 +39,7 @@ export const EditorSaveButton = ({ workflowId }: { workflowId: string }) => {
       nodes,
       edges,
     });
-  }
+  };
 
   return (
     <div className="ml-auto">
@@ -43,23 +48,23 @@ export const EditorSaveButton = ({ workflowId }: { workflowId: string }) => {
         Save
       </Button>
     </div>
-  )
+  );
 };
 
 export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
-  const { data: workflow } = useSuspenseWorkflow(workflowId);
+  const { data: workflow, isLoading } = useSuspenseWorkflow(workflowId);
   const updateWorkflow = useUpdateWorkflowName();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(workflow.name);
+  const [name, setName] = useState(workflow?.name ?? "");
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (workflow.name) {
+    if (workflow?.name) {
       setName(workflow.name);
     }
-  }, [workflow.name]);
+  }, [workflow?.name]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -69,7 +74,7 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
   }, [isEditing]);
 
   const handleSave = async () => {
-    if (name === workflow.name) {
+    if (name === workflow?.name) {
       setIsEditing(false);
       return;
     }
@@ -80,7 +85,7 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
         name,
       });
     } catch {
-      setName(workflow.name);
+      setName(workflow?.name ?? "");
     } finally {
       setIsEditing(false);
     }
@@ -90,10 +95,14 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
     if (e.key === "Enter") {
       handleSave();
     } else if (e.key === "Escape") {
-      setName(workflow.name);
+      setName(workflow?.name ?? "");
       setIsEditing(false);
     }
   };
+
+  if (isLoading) {
+    return <Skeleton className="h-5 w-[120px]" />;
+  }
 
   if (isEditing) {
     return (
@@ -106,14 +115,17 @@ export const EditorNameInput = ({ workflowId }: { workflowId: string }) => {
         onKeyDown={handleKeyDown}
         className="h-7 w-auto min-w-[100px] px-2"
       />
-    )
+    );
   }
 
   return (
-    <BreadcrumbItem onClick={() => setIsEditing(true)} className="cursor-pointer hover:text-foreground transition-colors">
-      {workflow.name}
+    <BreadcrumbItem
+      onClick={() => setIsEditing(true)}
+      className="cursor-pointer hover:text-foreground transition-colors"
+    >
+      {workflow?.name ?? "Untitled"}
     </BreadcrumbItem>
-  )
+  );
 };
 
 export const EditorBreadcrumbs = ({ workflowId }: { workflowId: string }) => {
@@ -131,7 +143,7 @@ export const EditorBreadcrumbs = ({ workflowId }: { workflowId: string }) => {
         <EditorNameInput workflowId={workflowId} />
       </BreadcrumbList>
     </Breadcrumb>
-  )
+  );
 };
 
 export const EditorHeader = ({ workflowId }: { workflowId: string }) => {

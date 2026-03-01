@@ -4,9 +4,7 @@ import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
 import { memo, useState } from "react";
 import { BaseExecutionNode } from "../base-execution-node";
 import { AnthropicDialog, AnthropicFormValues } from "./dialog";
-import { useNodeStatus } from "../../hooks/use-node-status";
-import { fetchAnthropicRealtimeToken } from "./actions";
-import { ANTHROPIC_CHANNEL_NAME } from "@/inngest/channels/anthropic";
+import { useNodeExecutionStatus } from "@/features/editor/hooks/use-node-status";
 
 type AnthropicNodeData = {
   variableName?: string;
@@ -20,29 +18,19 @@ type AnthropicNodeType = Node<AnthropicNodeData>;
 export const AnthropicNode = memo((props: NodeProps<AnthropicNodeType>) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setNodes } = useReactFlow();
-
-  const nodeStatus = useNodeStatus({
-    nodeId: props.id,
-    channel: ANTHROPIC_CHANNEL_NAME,
-    topic: "status",
-    refreshToken: fetchAnthropicRealtimeToken,
-  });
+  const status = useNodeExecutionStatus(props.id);
 
   const handleOpenSettings = () => setDialogOpen(true);
 
   const handleSubmit = (values: AnthropicFormValues) => {
-    setNodes((nodes) => nodes.map((node) => {
-      if (node.id === props.id) {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            ...values,
-          }
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === props.id) {
+          return { ...node, data: { ...node.data, ...values } };
         }
-      }
-      return node;
-    }))
+        return node;
+      }),
+    );
   };
 
   const nodeData = props.data;
@@ -63,13 +51,13 @@ export const AnthropicNode = memo((props: NodeProps<AnthropicNodeType>) => {
         id={props.id}
         icon="/logos/anthropic.svg"
         name="Anthropic"
-        status={nodeStatus}
+        status={status}
         description={description}
         onSettings={handleOpenSettings}
         onDoubleClick={handleOpenSettings}
       />
     </>
-  )
+  );
 });
 
 AnthropicNode.displayName = "AnthropicNode";

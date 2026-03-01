@@ -10,15 +10,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-export const UpgradeModal = ({ 
-  open, 
+export const UpgradeModal = ({
+  open,
   onOpenChange
 }: UpgradeModalProps) => {
   return (
@@ -34,7 +34,10 @@ export const UpgradeModal = ({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => authClient.checkout({ slug: "pro" })}
+            onClick={() => {
+              // TODO: Redirect to billing/checkout page from custom backend
+              toast.info("Billing requires custom backend integration");
+            }}
           >
             Upgrade Now
           </AlertDialogAction>

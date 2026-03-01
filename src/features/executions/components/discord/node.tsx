@@ -4,43 +4,25 @@ import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
 import { memo, useState } from "react";
 import { BaseExecutionNode } from "../base-execution-node";
 import { DiscordDialog, DiscordFormValues } from "./dialog";
-import { useNodeStatus } from "../../hooks/use-node-status";
-import { fetchDiscordRealtimeToken } from "./actions";
-import { DISCORD_CHANNEL_NAME } from "@/inngest/channels/discord";
+import { useNodeExecutionStatus } from "@/features/editor/hooks/use-node-status";
 
-type DiscordNodeData = {
-  webhookUrl?: string;
-  content?: string;
-};
-
+type DiscordNodeData = { webhookUrl?: string; content?: string };
 type DiscordNodeType = Node<DiscordNodeData>;
 
 export const DiscordNode = memo((props: NodeProps<DiscordNodeType>) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setNodes } = useReactFlow();
-
-  const nodeStatus = useNodeStatus({
-    nodeId: props.id,
-    channel: DISCORD_CHANNEL_NAME,
-    topic: "status",
-    refreshToken: fetchDiscordRealtimeToken,
-  });
+  const status = useNodeExecutionStatus(props.id);
 
   const handleOpenSettings = () => setDialogOpen(true);
-
   const handleSubmit = (values: DiscordFormValues) => {
-    setNodes((nodes) => nodes.map((node) => {
-      if (node.id === props.id) {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            ...values,
-          }
-        }
-      }
-      return node;
-    }))
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === props.id
+          ? { ...node, data: { ...node.data, ...values } }
+          : node,
+      ),
+    );
   };
 
   const nodeData = props.data;
@@ -61,13 +43,12 @@ export const DiscordNode = memo((props: NodeProps<DiscordNodeType>) => {
         id={props.id}
         icon="/logos/discord.svg"
         name="Discord"
-        status={nodeStatus}
+        status={status}
         description={description}
         onSettings={handleOpenSettings}
         onDoubleClick={handleOpenSettings}
       />
     </>
-  )
+  );
 });
-
 DiscordNode.displayName = "DiscordNode";

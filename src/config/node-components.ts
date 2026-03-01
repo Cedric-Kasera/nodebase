@@ -1,5 +1,4 @@
 import { InitialNode } from "@/components/initial-node";
-import { NodeType } from "@/generated/prisma";
 import type { NodeTypes } from "@xyflow/react";
 
 import { HttpRequestNode } from "@/features/executions/components/http-request/node";
@@ -11,6 +10,10 @@ import { OpenAiNode } from "@/features/executions/components/openai/node";
 import { AnthropicNode } from "@/features/executions/components/anthropic/node";
 import { DiscordNode } from "@/features/executions/components/discord/node";
 import { SlackNode } from "@/features/executions/components/slack/node";
+import { NodeType, ExecutionStatus } from "@/config/constants";
+
+// Re-export so existing imports still work
+export { NodeType, ExecutionStatus };
 
 export const nodeComponents = {
   [NodeType.INITIAL]: InitialNode,

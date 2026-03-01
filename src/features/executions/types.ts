@@ -1,17 +1,14 @@
-import type { Realtime } from "@inngest/realtime";
-import type { GetStepTools, Inngest } from "inngest";
-
+// Stubbed types — inngest/realtime removed
+// TODO: Replace with custom backend realtime types when implementing execution status streaming
 export type WorkflowContext = Record<string, unknown>;
 
-export type StepTools = GetStepTools<Inngest.Any>;
-
+// Simplified NodeExecutor type without inngest step/publish parameters
 export interface NodeExecutorParams<TData = Record<string, unknown>> {
   data: TData;
   nodeId: string;
-  userId: string;
+  userId?: string;
   context: WorkflowContext;
-  step: StepTools;
-  publish: Realtime.PublishFn;
+  // step and publish removed — re-add when custom backend realtime is integrated
 };
 
 export type NodeExecutor<TData = Record<string, unknown>> = (
